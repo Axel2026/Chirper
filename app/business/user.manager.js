@@ -11,21 +11,16 @@ function create(context) {
   }
 
   async function authenticate(email, password) {
-    console.log('test1')
     let userData;
     const user = await UserDAO.getByEmailOrName(email);
-    console.log('test2')
     if (!user) {
       throw applicationException.new(applicationException.UNAUTHORIZED, 'User with that email does not exist');
     }
-    console.log('test2.5')
     userData = await user;
-    console.log('test2.6')
     //await PasswordDAO.authorize(user.id, hashString(password));
     await PasswordDAO.authorize(email, password);
-    console.log('test2.7')
     const token = await TokenDAO.create(userData);
-    console.log('test3')
+    console.log('użytkownik istnieje w bazie')
     return getToken(token);
 
   }

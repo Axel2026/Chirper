@@ -5,13 +5,10 @@ import auth from '../middleware/auth';
 
 const userEndpoint = (router) => {
     router.post('/api/user/auth', async (request, response, next) => {
-        console.log('dalalaldlalwaldwaldwalwadladwadlwladwaldwlawdlawdadlw');
         try {
-            console.log('request.body.email ' + request.body.email);
-            console.log('request.body.password ' + request.body.password);
             let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
-            console.log('result ' + result);
             response.status(200).send(result);
+            console.log('result ' + JSON.stringify(result))
         } catch (error) {
             applicationException.errorHandler(error, response);
         }
