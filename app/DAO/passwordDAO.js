@@ -36,6 +36,7 @@ async function authorize(email, password) {
   throw applicationException.new(applicationException.UNAUTHORIZED, 'User and password does not match');
 }
 
+
 export default {
   createOrUpdate: createOrUpdate,
   authorize: authorize,
