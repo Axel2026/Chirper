@@ -33,45 +33,49 @@ function create(context) {
         });
     }
 
-async function authenticate(email, password) {
-    let userData;
-    const user = await UserDAO.getByEmailOrName(email);
-    if (!user) {
-        throw applicationException.new(applicationException.UNAUTHORIZED, 'User with that email does not exist');
+    async function authenticate(email, password) {
+        let userData;
+        const user = await UserDAO.getByEmailOrName(email);
+        if (!user) {
+            throw applicationException.new(applicationException.UNAUTHORIZED, 'User with that email does not exist');
+        }
+        userData = await user;
+        //await PasswordDAO.authorize(user.id, hashString(password));
+        await PasswordDAO.authorize(email, password);
+        const token = await TokenDAO.create(userData);
+        console.log('użytkownik istnieje w bazie')
+        return getToken(token);
+
     }
-    userData = await user;
-    //await PasswordDAO.authorize(user.id, hashString(password));
-    await PasswordDAO.authorize(email, password);
-    const token = await TokenDAO.create(userData);
-    console.log('użytkownik istnieje w bazie')
-    return getToken(token);
-
-}
 
 
-function getToken(token) {
-    return {token: token.value};
-}
-
-async function createNewOrUpdate(userData) {
-    const user = await UserDAO.createNewOrUpdate(userData);
-    if (await userData.password) {
-        return await PasswordDAO.createOrUpdate({userId: user.id, password: hashString(userData.password)});
-    } else {
-        return user;
+    function getToken(token) {
+        return {token: token.value};
     }
-}
 
-async function removeHashSession(userId) {
-    return await TokenDAO.remove(userId);
-}
+    async function createNewOrUpdate(userData) {
+        console.log("business 1")
+        const user = await UserDAO.createNewOrUpdate(userData);
+        console.log("business 2")
+        if (await userData.password) {
+            console.log("business 3")
+            return await PasswordDAO.createOrUpdate({userId: user.id, password: hashString(userData.password)});
+        } else {
+            console.log("business 4")
+            return user;
+        }
+    }
 
-return {
-    authenticate: authenticate,
-    createNewOrUpdate: createNewOrUpdate,
-    removeHashSession: removeHashSession,
-    fetchAll: fetchAll,
-};
+    async function removeHashSession(userId) {
+        return await TokenDAO.remove(userId);
+    }
+
+    return {
+        authenticate: authenticate,
+        createNewOrUpdate: createNewOrUpdate,
+        removeHashSession: removeHashSession,
+        fetchAll: fetchAll,
+    };
 }
 
 export default {

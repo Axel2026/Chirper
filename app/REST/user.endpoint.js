@@ -34,9 +34,13 @@ const userEndpoint = (router) => {
 
     router.post('/api/user/create', async (request, response, next) => {
         try {
+            console.log('create 1')
             const result = await business.getUserManager(request).createNewOrUpdate(request.body);
+            console.log('create 2')
             response.status(200).send(result);
+            console.log('create 3')
         } catch (error) {
+            console.log('create 4 blad')
             applicationException.errorHandler(error, response);
         }
     });

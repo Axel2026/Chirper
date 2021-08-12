@@ -1,4 +1,3 @@
-
 import mongoose from 'mongoose';
 import * as _ from 'lodash';
 import Promise from 'bluebird';
@@ -8,21 +7,21 @@ import uniqueValidator from 'mongoose-unique-validator';
 
 
 const userRole = {
-  admin: 'admin',
-  user: 'user'
+    admin: 'admin',
+    user: 'user'
 };
 
 const userRoles = [userRole.admin, userRole.user];
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  name: { type: String, required: true, unique: true },
-  password: { type: String, required: true, unique: true },
-  role: { type: String, enum: userRoles, default: userRole.admin, required: false },
-  active: { type: Boolean, default: true, required: false },
-  isAdmin: { type: Boolean, default: true, required: false }
+    email: {type: String, required: true, unique: false},
+    name: {type: String, required: true, unique: false},
+    password: {type: String, required: true, unique: false},
+    role: {type: String, enum: userRoles, default: userRole.admin, required: false},
+    active: {type: Boolean, default: true, required: false},
+    isAdmin: {type: Boolean, default: true, required: false}
 }, {
-  collection: 'user'
+    collection: 'user'
 });
 
 userSchema.plugin(uniqueValidator);
@@ -30,31 +29,39 @@ userSchema.plugin(uniqueValidator);
 const UserModel = mongoose.model('user', userSchema);
 
 function createNewOrUpdate(user) {
-  return Promise.resolve().then(() => {
-    if (!user.id) {
-      return new UserModel(user).save().then(result => {
-        if (result) {
-          return mongoConverter(result);
+    console.log('createXXX 1')
+    return Promise.resolve().then(() => {
+        if (!user.id) {
+            console.log('createXXX 2')
+            return new UserModel(user).save().then(result => {
+                console.log('createXXX 2.5')
+                if (result) {
+                    console.log('createXXX 3')
+                    return mongoConverter(result);
+                }else{
+                    console.log('createXXX 69')
+                }
+            });
+        } else {
+            console.log('createXXX 4')
+            return UserModel.findByIdAndUpdate(user.id, _.omit(user, 'id'), {new: true});
         }
-      });
-    } else {
-      return UserModel.findByIdAndUpdate(user.id, _.omit(user, 'id'), { new: true });
-    }
-  }).catch(error => {
-    if ('ValidationError' === error.name) {
-      error = error.errors[Object.keys(error.errors)[0]];
-      throw applicationException.new(applicationException.BAD_REQUEST, error.message);
-    }
-    throw error;
-  });
+    }).catch(error => {
+        console.log('createXXX 5 blad')
+        if ('ValidationError' === error.name) {
+            error = error.errors[Object.keys(error.errors)[0]];
+            throw applicationException.new(applicationException.BAD_REQUEST, error.message);
+        }
+        throw error;
+    });
 }
 
 async function getByEmailOrName(name) {
-  const result = await UserModel.findOne({ $or: [{ email: name }, { name: name }] });
-  if (result) {
-    return mongoConverter(result);
-  }
-  throw applicationException.new(applicationException.NOT_FOUND, 'User not found');
+    const result = await UserModel.findOne({$or: [{email: name}, {name: name}]});
+    if (result) {
+        return mongoConverter(result);
+    }
+    throw applicationException.new(applicationException.NOT_FOUND, 'User not found');
 }
 
 // async function get(id) {
@@ -66,15 +73,15 @@ async function getByEmailOrName(name) {
 // }
 
 async function removeById(id) {
-  return await UserModel.findByIdAndRemove(id);
+    return await UserModel.findByIdAndRemove(id);
 }
 
 export default {
-  createNewOrUpdate: createNewOrUpdate,
-  getByEmailOrName: getByEmailOrName,
-  //get: get,
-  removeById: removeById,
+    createNewOrUpdate: createNewOrUpdate,
+    getByEmailOrName: getByEmailOrName,
+    //get: get,
+    removeById: removeById,
 
-  userRole: userRole,
-  model: UserModel
+    userRole: userRole,
+    model: UserModel
 };

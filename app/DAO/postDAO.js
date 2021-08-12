@@ -38,9 +38,10 @@ const PostModel = mongoose.model('post', postSchema);
 
 async function authorizeAuthor(author) {
     console.log('authorizeAuthor');
-    const result = await PostModel.find({author: author});
-    console.log('result ' + result);
+    const result = await PostModel.findOne({author: author});
+    // console.log('result post DAO ' + result);
     if (result && mongoConverter(result)) {
+        console.log('result post DAO ' + result);
         return result;
     } else {
         return false;
