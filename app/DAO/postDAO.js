@@ -1,6 +1,4 @@
 import mongoose from 'mongoose';
-import * as _ from 'lodash';
-import Promise from 'bluebird';
 import applicationException from '../service/applicationException';
 import mongoConverter from '../service/mongoConverter';
 import uniqueValidator from 'mongoose-unique-validator';
@@ -11,7 +9,6 @@ const userRole = {
     user: 'user'
 };
 
-const userRoles = [userRole.admin, userRole.user];
 
 const postSchema = new mongoose.Schema({
     author: {type: String, required: true, unique: false},
@@ -28,26 +25,17 @@ postSchema.plugin(uniqueValidator);
 const PostModel = mongoose.model('post', postSchema);
 
 
-// async function getByAuthor(name) {
-//     const result = await PostModel.find({author: name});
-//     if (result) {
-//         return mongoConverter(result);
-//     }
-//     throw applicationException.new(applicationException.NOT_FOUND, 'Post not found');
-// }
-
 async function authorizeAuthor(author) {
-    console.log('authorizeAuthor');
-    const result = await PostModel.findOne({author: author});
-    // console.log('result post DAO ' + result);
+    const result = await PostModel.find({author: author});
     if (result && mongoConverter(result)) {
-        console.log('result post DAO ' + result);
         return result;
     } else {
         return false;
     }
     throw applicationException.new(applicationException.UNAUTHORIZED, 'author does not match');
 }
+
+module.exports =  PostModel;
 
 export default {
     //getByAuthor: getByAuthor,

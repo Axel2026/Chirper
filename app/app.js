@@ -7,6 +7,12 @@ import morgan from 'morgan';
 import routes from './REST/routes';
 
 const app = express();
+
+//hindus
+
+
+//koniec hindusa
+
 app.use(express.static(__dirname + '/public'));
 
 app.use(morgan('dev'));
@@ -16,6 +22,7 @@ app.use(bodyParser.json({limit: '2048kb'}));
 app.use(express.static('public'));
 
 app.use(cors());
+
 
 mongoose.connect(config.databaseUrl, {
   useNewUrlParser: true,
