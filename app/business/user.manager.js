@@ -8,8 +8,11 @@ import * as logger from "mongoose";
 import * as db from "mongodb";
 import * as MongoClient from "mongodb";
 import * as res from "express";
+import userDAO from "../DAO/userDAO";
 
 function create(context) {
+
+    let userArray = [8];
 
     function hashString(password) {
         return sha1(password);
@@ -33,6 +36,13 @@ function create(context) {
         });
     }
 
+    function getValues() {
+        return {
+            first: getFirstValue(),
+            second: getSecondValue(),
+        };
+    }
+
     async function authenticate(email, password) {
         let userData;
         const user = await UserDAO.getByEmailOrName(email);
@@ -40,11 +50,21 @@ function create(context) {
             throw applicationException.new(applicationException.UNAUTHORIZED, 'User with that email does not exist');
         }
         userData = await user;
-        //await PasswordDAO.authorize(user.id, hashString(password));
-        await PasswordDAO.authorize(email, password);
+        await PasswordDAO.authorize(user.id, hashString(password));
+        // await PasswordDAO.authorize(email, password);
         const token = await TokenDAO.create(userData);
+
+        // for (let i = 0; i < user.length; i++) {
+        //     userArray[i] = JSON.stringify(user[i]);
+        // }
+        // user.push({key: token, value: getToken(token)});
+        // userArray[7] = getToken(token);
+
         console.log('użytkownik istnieje w bazie')
-        return getToken(token);
+        return {
+            token: getToken(token),
+            user: user
+        };
 
     }
 
@@ -54,14 +74,10 @@ function create(context) {
     }
 
     async function createNewOrUpdate(userData) {
-        console.log("business 1")
         const user = await UserDAO.createNewOrUpdate(userData);
-        console.log("business 2")
         if (await userData.password) {
-            console.log("business 3")
             return await PasswordDAO.createOrUpdate({userId: user.id, password: hashString(userData.password)});
         } else {
-            console.log("business 4")
             return user;
         }
     }

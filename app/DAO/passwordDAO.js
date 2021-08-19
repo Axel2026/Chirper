@@ -24,9 +24,12 @@ async function createOrUpdate(data) {
   return result;
 }
 
-async function authorize(email, password) {
+async function authorize(id, password) {
   console.log('testowanie1')
-  const result = await PasswordModel.findOne({ email: email, password: password });
+  const result = await PasswordModel.findOne({ userId: id, password: password });
+  console.log('result ' + result);
+  console.log('result id ' + id);
+  console.log('result password ' + password);
   console.log('testowanie2')
   if (result && mongoConverter(result)) {
     console.log('testowanie2.5')

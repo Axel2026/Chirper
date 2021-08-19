@@ -6,20 +6,14 @@ import mongoConverter from '../service/mongoConverter';
 import uniqueValidator from 'mongoose-unique-validator';
 
 
-const userRole = {
-    admin: 'admin',
-    user: 'user'
-};
-
-const userRoles = [userRole.admin, userRole.user];
-
 const userSchema = new mongoose.Schema({
-    email: {type: String, required: true, unique: false},
-    name: {type: String, required: true, unique: false},
-    password: {type: String, required: true, unique: false},
-    role: {type: String, enum: userRoles, default: userRole.admin, required: false},
-    active: {type: Boolean, default: true, required: false},
-    isAdmin: {type: Boolean, default: true, required: false}
+    nickname: {type: String, required: true, unique: true},
+    email: {type: String, required: true, unique: true},
+    name: {type: String, required: false, unique: false},
+    surname: {type: String, required: false, unique: false},
+    // password: {type: String, required: true, unique: false},
+    isAdmin: {type: Boolean, default: true, required: true},
+    birthday: {type: String, required: true, unique: false}
 }, {
     collection: 'user'
 });
@@ -31,7 +25,9 @@ const UserModel = mongoose.model('user', userSchema);
 function createNewOrUpdate(user) {
     console.log('createXXX 1')
     return Promise.resolve().then(() => {
-        if (!user.id) {
+        if (!user.id && findByEmailOrNickname(user.email, user.nickname)) {
+            console.log('user.email ' + user.email)
+            console.log('user.nickname ' + user.nickname)
             console.log('createXXX 2')
             return new UserModel(user).save().then(result => {
                 console.log('createXXX 2.5')
@@ -49,7 +45,7 @@ function createNewOrUpdate(user) {
     }).catch(error => {
         console.log('createXXX 5 blad')
         if ('ValidationError' === error.name) {
-            error = error.errors[Object.keys(error.errors)[0]];
+            // error = error.errors[Object.keys(error.errors)[0]];
             throw applicationException.new(applicationException.BAD_REQUEST, error.message);
         }
         throw error;
@@ -59,10 +55,23 @@ function createNewOrUpdate(user) {
 async function getByEmailOrName(name) {
     const result = await UserModel.findOne({$or: [{email: name}, {name: name}]});
     if (result) {
+        console.log('przechodzi get by email or name')
         return mongoConverter(result);
     }
     throw applicationException.new(applicationException.NOT_FOUND, 'User not found');
 }
+
+
+async function findByEmailOrNickname(email,nickname) {
+    const result = await UserModel.findOne({$or: [{email: email}, {nickname: nickname}]});
+    if (result) {
+        return true;
+    }else{
+        alert("Taki nick lub email już istnieje!")
+        return false;
+    }
+}
+
 
 // async function get(id) {
 //   const result = await UserModel.findOne({ _id: id });
@@ -79,9 +88,8 @@ async function removeById(id) {
 export default {
     createNewOrUpdate: createNewOrUpdate,
     getByEmailOrName: getByEmailOrName,
+    findByEmailOrNickname: findByEmailOrNickname,
     //get: get,
     removeById: removeById,
-
-    userRole: userRole,
     model: UserModel
 };

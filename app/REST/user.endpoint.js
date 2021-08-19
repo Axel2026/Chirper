@@ -4,9 +4,12 @@ import auth from '../middleware/auth';
 
 const PostModel = require('../DAO/postDAO');
 const userEndpoint = (router) => {
+
     router.post('/api/user/auth', async (request, response) => {
         try {
+            console.log('request body id ' +request.body.id )
             let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
+
             response.status(200).send(result);
         } catch (error) {
             applicationException.errorHandler(error, response);
@@ -48,6 +51,7 @@ const userEndpoint = (router) => {
             time: timeString,
             likes: req.body.likes
         });
+
         newPostModel.save((error) => {
             if (error) {
                 res.status(500).json({msg: 'Sorry, internal server errors'});
