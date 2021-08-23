@@ -4,23 +4,21 @@ import mongoConverter from '../service/mongoConverter';
 import uniqueValidator from 'mongoose-unique-validator';
 
 
-const postSchema = new mongoose.Schema({
+const messageSchema = new mongoose.Schema({
     author: {type: String, required: true, unique: false},
     content: {type: String, required: true, unique: false},
-    date: {type: String, required: true, unique: false},
-    time: {type: String, required: true, unique: false},
-    likes: {type: Number, required: true, unique: false},
+    time: {type: String, required: true, unique: false}
 }, {
-    collection: 'post'
+    collection: 'message'
 });
 
-postSchema.plugin(uniqueValidator);
+messageSchema.plugin(uniqueValidator);
 
-const PostModel = mongoose.model('post', postSchema);
+const MessageModel = mongoose.model('message', messageSchema);
 
 
 // async function authorizeAuthor(author) {
-//     const result = await PostModel.find({author: author});
+//     const result = await MessageModel.find({author: author});
 //     if (result && mongoConverter(result)) {
 //         return result;
 //     } else {
@@ -29,10 +27,11 @@ const PostModel = mongoose.model('post', postSchema);
 //     throw applicationException.new(applicationException.UNAUTHORIZED, 'author does not match');
 // }
 
-module.exports =  PostModel;
+module.exports =  MessageModel;
 
 export default {
     //getByAuthor: getByAuthor,
-    model: PostModel,
+    // userRole: userRole,
+    model: MessageModel,
     // authorizeAuthor: authorizeAuthor
 };

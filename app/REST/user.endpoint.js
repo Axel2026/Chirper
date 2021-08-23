@@ -3,6 +3,7 @@ import applicationException from '../service/applicationException';
 import auth from '../middleware/auth';
 
 const PostModel = require('../DAO/postDAO');
+const MessageModel = require('../DAO/messageDAO');
 const userEndpoint = (router) => {
 
     router.post('/api/user/auth', async (request, response) => {
@@ -27,6 +28,15 @@ const userEndpoint = (router) => {
             });
     });
 
+    router.get('/api/feed/chat', (req, res) => {
+        MessageModel.find({})
+            .then((data) => {
+                res.json(data);
+            })
+            .catch((error) => {
+                console.log('error: ', error);
+            });
+    });
 
     router.post('/api/feed/save', (req, res) => {
 
@@ -62,6 +72,34 @@ const userEndpoint = (router) => {
             });
         });
     });
+
+
+    router.post('/api/feed/send', (req, res) => {
+
+        var date = new Date();
+
+        if (date.getMinutes() < 10) {
+            var timeString = date.getHours() + ":0" + date.getMinutes()
+        } else {
+            var timeString = date.getHours() + ":" + date.getMinutes()
+        }
+        const newMessageModel = new MessageModel({
+            author: req.body.author,
+            content: req.body.content,
+            time: timeString,
+        });
+
+        newMessageModel.save((error) => {
+            if (error) {
+                res.status(500).json({msg: 'Sorry, internal server errors'});
+                return;
+            }
+            return res.json({
+                msg: 'Your data has been saved!'
+            });
+        });
+    });
+
 
     ////////od niego /////////////
 
