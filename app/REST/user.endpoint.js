@@ -1,6 +1,8 @@
 import business from '../business/business.container';
 import applicationException from '../service/applicationException';
 import auth from '../middleware/auth';
+import config from '../config.js';
+import convert from '../service/mongoConverter.js';
 
 const PostModel = require('../DAO/postDAO');
 const MessageModel = require('../DAO/messageDAO');
@@ -8,7 +10,7 @@ const userEndpoint = (router) => {
 
     router.post('/api/user/auth', async (request, response) => {
         try {
-            console.log('request body id ' +request.body.id )
+            console.log('request body id ' + request.body.id)
             let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
 
             response.status(200).send(result);
@@ -19,6 +21,7 @@ const userEndpoint = (router) => {
 
 
     router.get('/api/feed/posts', (req, res) => {
+        console.log("api stopy posts")
         PostModel.find({})
             .then((data) => {
                 res.json(data);
@@ -98,6 +101,41 @@ const userEndpoint = (router) => {
                 msg: 'Your data has been saved!'
             });
         });
+    });
+
+    router.post('/api/feed/update', (req, res) => {
+
+        // var myDocument = db.bios.findOne();
+
+        var numberOfLikes = 0;
+        PostModel.find({_id: req.body.postId}, {_id: 0, likes: 1})
+            .then((data) => {
+                var actionLikes = 1;
+                if (req.body.isLiked) {
+                    actionLikes = -1
+                }
+                numberOfLikes = data[0].likes + actionLikes;
+                console.log('convert ' + data[0].likes)
+                console.log("przeszlo do then")
+                console.log("data " + data)
+
+
+                var myquery = {_id: req.body.postId};
+                var newvalues = {$set: {date: "2053-12-10", likes: (numberOfLikes)}};
+                // config.databaseUrl.collection("post").updateOne(myquery, newvalues, function(err, res) {
+                PostModel.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    // db.close();
+                });
+                res.status(200).send(data[0]);
+                // res.json(data[0].likes);
+            })
+            .catch((error) => {
+                console.log('error: ', error);
+            });
+        console.log('likes ' + numberOfLikes)
+
     });
 
 
