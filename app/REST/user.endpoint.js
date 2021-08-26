@@ -105,8 +105,6 @@ const userEndpoint = (router) => {
 
     router.post('/api/feed/update', (req, res) => {
 
-        // var myDocument = db.bios.findOne();
-
         var numberOfLikes = 0;
         PostModel.find({_id: req.body.postId}, {_id: 0, likes: 1})
             .then((data) => {
@@ -114,28 +112,21 @@ const userEndpoint = (router) => {
                 if (req.body.isLiked) {
                     actionLikes = -1
                 }
-                numberOfLikes = data[0].likes + actionLikes;
-                console.log('convert ' + data[0].likes)
-                console.log("przeszlo do then")
-                console.log("data " + data)
+                data[0].likes += actionLikes;
+                numberOfLikes = data[0].likes;
 
+                var myQuery = {_id: req.body.postId};
+                var newValues = {$set: {date: "2053-12-10", likes: numberOfLikes}};
 
-                var myquery = {_id: req.body.postId};
-                var newvalues = {$set: {date: "2053-12-10", likes: (numberOfLikes)}};
-                // config.databaseUrl.collection("post").updateOne(myquery, newvalues, function(err, res) {
-                PostModel.updateOne(myquery, newvalues, function (err, res) {
+                PostModel.updateOne(myQuery, newValues, function (err, res) {
                     if (err) throw err;
                     console.log("1 document updated");
-                    // db.close();
                 });
                 res.status(200).send(data[0]);
-                // res.json(data[0].likes);
             })
             .catch((error) => {
                 console.log('error: ', error);
             });
-        console.log('likes ' + numberOfLikes)
-
     });
 
 
