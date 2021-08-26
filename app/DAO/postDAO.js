@@ -10,6 +10,7 @@ const postSchema = new mongoose.Schema({
     date: {type: String, required: true, unique: false},
     time: {type: String, required: true, unique: false},
     likes: {type: Number, required: true, unique: false},
+    likedBy: [String]
 }, {
     collection: 'post'
 });

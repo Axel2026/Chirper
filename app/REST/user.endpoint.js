@@ -10,7 +10,6 @@ const userEndpoint = (router) => {
 
     router.post('/api/user/auth', async (request, response) => {
         try {
-            console.log('request body id ' + request.body.id)
             let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
 
             response.status(200).send(result);
@@ -21,7 +20,6 @@ const userEndpoint = (router) => {
 
 
     router.get('/api/feed/posts', (req, res) => {
-        console.log("api stopy posts")
         PostModel.find({})
             .then((data) => {
                 res.json(data);
@@ -57,12 +55,15 @@ const userEndpoint = (router) => {
         } else {
             var timeString = date.getHours() + ":" + date.getMinutes()
         }
+
+
         const newPostModel = new PostModel({
             author: req.body.author,
             content: req.body.content,
             date: dateString,
             time: timeString,
-            likes: req.body.likes
+            likes: req.body.likes,
+            likedBy: []
         });
 
         newPostModel.save((error) => {
@@ -106,21 +107,26 @@ const userEndpoint = (router) => {
     router.post('/api/feed/update', (req, res) => {
 
         var numberOfLikes = 0;
-        PostModel.find({_id: req.body.postId}, {_id: 0, likes: 1})
+        PostModel.find({_id: req.body.postId}, {_id: 0, likes: 1, likedBy: 2, author: 3})
             .then((data) => {
-                var actionLikes = 1;
-                if (req.body.isLiked) {
-                    actionLikes = -1
+                var actionLikes;
+                if (!req.body.isLiked) {
+                    actionLikes = 1
+                    data[0].likedBy.push(data[0].author)
+                    console.log("TABLICA OSÓB LUBIĄCYCH: " + data[0].likedBy)
+                } else {
+                    actionLikes = -1;
+                    data[0].likedBy.remove(data[0].author)
+                    console.log("TABLICA OSÓB LUBIĄCYCH: " + data[0].likedBy)
                 }
                 data[0].likes += actionLikes;
                 numberOfLikes = data[0].likes;
 
                 var myQuery = {_id: req.body.postId};
-                var newValues = {$set: {date: "2053-12-10", likes: numberOfLikes}};
+                var newValues = {$set: {likes: numberOfLikes, likedBy: data[0].likedBy}};
 
                 PostModel.updateOne(myQuery, newValues, function (err, res) {
                     if (err) throw err;
-                    console.log("1 document updated");
                 });
                 res.status(200).send(data[0]);
             })
