@@ -42,13 +42,18 @@ const userEndpoint = (router) => {
     router.post('/api/feed/save', (req, res) => {
 
         var date = new Date();
+        console.log('aktualna data: ' +  date);
 
-        date.setMonth(date.getMonth() + 1);
+        //date.setMonth(date.getMonth()+1 );
+        //console.log('aktualna data0,5: ' +  date);
         if (date.getMonth() < 10) {
-            var dateString = date.getDate() + "." + "0" + date.getMonth() + "." + date.getFullYear();
+            var month = date.getMonth()+1
+            var dateString = date.getDate() + "." + "0" + month + "." + date.getFullYear();
         } else {
-            var dateString = date.getDate() + "." + date.getMonth() + "." + date.getFullYear();
+            var month = date.getMonth()+1
+            var dateString = date.getDate() + "." + month + "." + date.getFullYear();
         }
+        console.log('aktualna data2: ' +  dateString);
 
         if (date.getMinutes() < 10) {
             var timeString = date.getHours() + ":0" + date.getMinutes()
