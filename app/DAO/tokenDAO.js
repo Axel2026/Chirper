@@ -25,6 +25,7 @@ const TokenModel = mongoose.model('token', tokenSchema);
 async function create(user) {
   const access = 'auth';
   const userData = {
+    nickname: user.nickname,
     userId: user.id,
     name: user.email,
     role: user.role,

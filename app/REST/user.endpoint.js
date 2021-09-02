@@ -48,10 +48,18 @@ const userEndpoint = (router) => {
         //console.log('aktualna data0,5: ' +  date);
         if (date.getMonth() < 10) {
             var month = date.getMonth()+1
-            var dateString = date.getDate() + "." + "0" + month + "." + date.getFullYear();
+            if(date.getDate() < 10) {
+                var dateString = "0" + date.getDate() + "." + "0" + month + "." + date.getFullYear();
+            }else{
+                var dateString = date.getDate() + "." + "0" + month + "." + date.getFullYear();
+            }
         } else {
             var month = date.getMonth()+1
-            var dateString = date.getDate() + "." + month + "." + date.getFullYear();
+            if(date.getDate() < 10) {
+                var dateString = "0" + date.getDate() + "." + month + "." + date.getFullYear();
+            }else{
+                var dateString = date.getDate() + "." + month + "." + date.getFullYear();
+            }
         }
         console.log('aktualna data2: ' +  dateString);
 
@@ -61,7 +69,7 @@ const userEndpoint = (router) => {
             var timeString = date.getHours() + ":" + date.getMinutes()
         }
 
-
+        console.log('REQ BODY LIKES ' + req.body.likes)
         const newPostModel = new PostModel({
             author: req.body.author,
             content: req.body.content,
@@ -117,11 +125,13 @@ const userEndpoint = (router) => {
                 var actionLikes;
                 if (!req.body.isLiked) {
                     actionLikes = 1
-                    data[0].likedBy.push(data[0].author)
+                    // data[0].likedBy.push(data[0].author)
+                    data[0].likedBy.push(req.body.nickname)
                     console.log("TABLICA OSÓB LUBIĄCYCH: " + data[0].likedBy)
                 } else {
                     actionLikes = -1;
-                    data[0].likedBy.remove(data[0].author)
+                    // data[0].likedBy.remove(data[0].author)
+                    data[0].likedBy.remove(req.body.nickname)
                     console.log("TABLICA OSÓB LUBIĄCYCH: " + data[0].likedBy)
                 }
                 data[0].likes += actionLikes;
