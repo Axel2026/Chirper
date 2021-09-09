@@ -5,44 +5,37 @@ import mongoConverter from '../service/mongoConverter';
 
 
 const passwordSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true, unique: true },
-  password: { type: String, required: true }
+    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true, unique: true},
+    password: {type: String, required: true}
 }, {
-  collection: 'password'
+    collection: 'password'
 });
 
 const PasswordModel = mongoose.model('password', passwordSchema);
 
 async function createOrUpdate(data) {
-  const result = await PasswordModel.findOneAndUpdate({ userId: data.userId }, _.omit(data, 'id'), { new: true });
-  if (!result) {
-    const result = await new PasswordModel({ userId: data.userId, password: data.password }).save();
-    if (result) {
-      return mongoConverter(result);
+    const result = await PasswordModel.findOneAndUpdate({userId: data.userId}, _.omit(data, 'id'), {new: true});
+    if (!result) {
+        const result = await new PasswordModel({userId: data.userId, password: data.password}).save();
+        if (result) {
+            return mongoConverter(result);
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 async function authorize(id, password) {
-  console.log('testowanie1')
-  const result = await PasswordModel.findOne({ userId: id, password: password });
-  console.log('result ' + result);
-  console.log('result id ' + id);
-  console.log('result password ' + password);
-  console.log('testowanie2')
-  if (result && mongoConverter(result)) {
-    console.log('testowanie2.5')
-    return true;
-  }
-  console.log('testowanie3')
-  throw applicationException.new(applicationException.UNAUTHORIZED, 'User and password does not match');
+    const result = await PasswordModel.findOne({userId: id, password: password});
+    if (result && mongoConverter(result)) {
+        return true;
+    }
+    throw applicationException.new(applicationException.UNAUTHORIZED, 'User and password does not match');
 }
 
 
 export default {
-  createOrUpdate: createOrUpdate,
-  authorize: authorize,
+    createOrUpdate: createOrUpdate,
+    authorize: authorize,
 
-  model: PasswordModel
+    model: PasswordModel
 };

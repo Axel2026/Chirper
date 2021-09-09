@@ -1,8 +1,6 @@
 import business from '../business/business.container';
 import applicationException from '../service/applicationException';
 import auth from '../middleware/auth';
-import config from '../config.js';
-import convert from '../service/mongoConverter.js';
 
 const PostModel = require('../DAO/postDAO');
 const MessageModel = require('../DAO/messageDAO');
@@ -42,26 +40,22 @@ const userEndpoint = (router) => {
     router.post('/api/feed/save', (req, res) => {
 
         var date = new Date();
-        console.log('aktualna data: ' +  date);
 
-        //date.setMonth(date.getMonth()+1 );
-        //console.log('aktualna data0,5: ' +  date);
         if (date.getMonth() < 10) {
-            var month = date.getMonth()+1
-            if(date.getDate() < 10) {
+            var month = date.getMonth() + 1
+            if (date.getDate() < 10) {
                 var dateString = "0" + date.getDate() + "." + "0" + month + "." + date.getFullYear();
-            }else{
+            } else {
                 var dateString = date.getDate() + "." + "0" + month + "." + date.getFullYear();
             }
         } else {
-            var month = date.getMonth()+1
-            if(date.getDate() < 10) {
+            var month = date.getMonth() + 1
+            if (date.getDate() < 10) {
                 var dateString = "0" + date.getDate() + "." + month + "." + date.getFullYear();
-            }else{
+            } else {
                 var dateString = date.getDate() + "." + month + "." + date.getFullYear();
             }
         }
-        console.log('aktualna data2: ' +  dateString);
 
         if (date.getMinutes() < 10) {
             var timeString = date.getHours() + ":0" + date.getMinutes()
@@ -69,7 +63,6 @@ const userEndpoint = (router) => {
             var timeString = date.getHours() + ":" + date.getMinutes()
         }
 
-        console.log('REQ BODY LIKES ' + req.body.likes)
         const newPostModel = new PostModel({
             author: req.body.author,
             content: req.body.content,
@@ -125,14 +118,10 @@ const userEndpoint = (router) => {
                 var actionLikes;
                 if (!req.body.isLiked) {
                     actionLikes = 1
-                    // data[0].likedBy.push(data[0].author)
                     data[0].likedBy.push(req.body.nickname)
-                    console.log("TABLICA OSÓB LUBIĄCYCH: " + data[0].likedBy)
                 } else {
                     actionLikes = -1;
-                    // data[0].likedBy.remove(data[0].author)
                     data[0].likedBy.remove(req.body.nickname)
-                    console.log("TABLICA OSÓB LUBIĄCYCH: " + data[0].likedBy)
                 }
                 data[0].likes += actionLikes;
                 numberOfLikes = data[0].likes;
@@ -150,9 +139,6 @@ const userEndpoint = (router) => {
             });
     });
 
-
-    ////////od niego /////////////
-
     router.post('/api/user/create', async (request, response, next) => {
         try {
             const result = await business.getUserManager(request).createNewOrUpdate(request.body);
@@ -161,17 +147,6 @@ const userEndpoint = (router) => {
             applicationException.errorHandler(error, response);
         }
     });
-
-    router.delete('/api/user/logout/:userId', auth, async (request, response, next) => {
-        try {
-            let result = await business.getUserManager(request).removeHashSession(request.body.userId);
-            response.status(200).send(result);
-        } catch (error) {
-            applicationException.errorHandler(error, response);
-        }
-    });
-
-
 };
 
 export default userEndpoint;

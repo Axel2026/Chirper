@@ -1,6 +1,4 @@
 import mongoose from 'mongoose';
-import applicationException from '../service/applicationException';
-import mongoConverter from '../service/mongoConverter';
 import uniqueValidator from 'mongoose-unique-validator';
 
 
@@ -16,22 +14,8 @@ messageSchema.plugin(uniqueValidator);
 
 const MessageModel = mongoose.model('message', messageSchema);
 
-
-// async function authorizeAuthor(author) {
-//     const result = await MessageModel.find({author: author});
-//     if (result && mongoConverter(result)) {
-//         return result;
-//     } else {
-//         return false;
-//     }
-//     throw applicationException.new(applicationException.UNAUTHORIZED, 'author does not match');
-// }
-
-module.exports =  MessageModel;
+module.exports = MessageModel;
 
 export default {
-    //getByAuthor: getByAuthor,
-    // userRole: userRole,
     model: MessageModel,
-    // authorizeAuthor: authorizeAuthor
 };
