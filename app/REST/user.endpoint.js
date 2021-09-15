@@ -6,6 +6,44 @@ const PostModel = require('../DAO/postDAO');
 const MessageModel = require('../DAO/messageDAO');
 const userEndpoint = (router) => {
 
+
+    router.post('/sendcastle/user/auth', async (request, response) => {
+        try {
+            console.log("przeszlo 1")
+            let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
+            console.log("email " + request.body.email)
+            console.log("password " + request.body.password)
+            response.status(200).send(result);
+            console.log("restu;lt: " + (result.user.nickname))
+            console.log("przeszlo last")
+        } catch (error) {
+            console.log("error catch")
+            applicationException.errorHandler(error, response);
+        }
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // CHIRPER
+    // -----------------------------------------------
+    // -----------------------------------------------
+
     router.post('/api/user/auth', async (request, response) => {
         try {
             let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
@@ -15,7 +53,6 @@ const userEndpoint = (router) => {
             applicationException.errorHandler(error, response);
         }
     });
-
 
     router.get('/api/feed/posts', (req, res) => {
         PostModel.find({})
