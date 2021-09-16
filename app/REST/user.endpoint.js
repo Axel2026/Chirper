@@ -1,6 +1,8 @@
 import business from '../business/business.container';
 import applicationException from '../service/applicationException';
 import auth from '../middleware/auth';
+import * as databaseUrl from "mongodb";
+import * as mongoose from "mongoose";
 
 const PostModel = require('../DAO/postDAO');
 const MessageModel = require('../DAO/messageDAO');
@@ -23,10 +25,35 @@ const userEndpoint = (router) => {
     });
 
 
+    router.get('/sendcastle/feed/posts', (req, res) => {
+
+        setTimeout(function () {
+            PostModel.find({})
+                .then((data) => {
+                    res.json(data);
+                })
+                .catch((error) => {
+                    console.log('error: ', error);
+                });
+
+        }, 1000);
+
+    });
 
 
-
-
+    router.post('/sendcastle/newconversation', async (request, response) => {
+        try {
+            mongoose.model("conversation3", {
+                author: {
+                    type: String,
+                    index: true
+                }
+            })
+            response.status(200)
+        } catch (error) {
+            applicationException.errorHandler(error, response);
+        }
+    });
 
 
 

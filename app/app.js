@@ -19,7 +19,7 @@ app.use(express.static('public'));
 app.use(cors());
 
 
-mongoose.connect(config.databaseUrl, {
+mongoose.connect(config.databaseUrlSendCastle, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false
@@ -27,9 +27,24 @@ mongoose.connect(config.databaseUrl, {
     if (error) {
         console.error(error);
     } else {
+
         console.info('Connect with database established');
     }
 });
+
+//CHIRPER \/\/\/
+// mongoose.connect(config.databaseUrl, {
+//     useNewUrlParser: true,
+//     useCreateIndex: true,
+//     useFindAndModify: false
+// }, (error) => {
+//     if (error) {
+//         console.error(error);
+//     } else {
+//
+//         console.info('Connect with database established');
+//     }
+// });
 
 process.on('SIGINT', () => {
     mongoose.connection.close(function () {
