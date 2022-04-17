@@ -2,21 +2,17 @@
 
 ## Home page
 
-![Home page](https://i.imgur.com/At9u4RY.png)
+![Home page](https://i.imgur.com/nE0i9Gh.png)
 
-## User page
+## Profile page
 
-![User page](https://i.imgur.com/IBVQkXl.png)
-
-## Liked post
-
-![Liked post](https://i.imgur.com/GdzTNAO.png)
+![User page](https://i.imgur.com/xWnFQTb.png)
 
 ## Login page
 
-![Login page](https://i.imgur.com/Kvf3aUF.png)
+![Login page](https://i.imgur.com/Gm7xZbZ.png)
 
-## Register page
+## Post details page
 
-![Register page](https://i.imgur.com/bKNvCsG.png)
+![Register page](https://i.imgur.com/SWvSVaZ.png)
 
