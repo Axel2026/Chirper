@@ -1,91 +1,119 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import axios from "axios";
-import {decodeToken} from "react-jwt";
+import {useNavigate} from "react-router-dom";
+import trashIcon from "../images/trash_icon.png"
+import {useAuth0} from "@auth0/auth0-react";
+import moment from "moment";
+import LoadingSpin from "react-loading-spin";
 
-function SinglePost({id, author, content, likes, date, time, likedBy}) {
+function SinglePost({id, userId, content, date, time, refreshPosts, likedBy, chirpIndex}) {
 
     const [liked, setLiked] = useState(false);
-    const [responseLikes, setResponseLikes] = useState(likes);
-    const [likedByChanged, setLikedByChanged] = useState(likedBy)
+    const [likedByArray, setLikedByArray] = useState(likedBy);
+    const [userData, setUserData] = useState();
 
-    const payload = {
-        isLiked: liked,
-        postId: id,
-        nickname: decodeToken(localStorage.getItem('token')).nickname
-    };
+    const {isAuthenticated, isLoading, user} = useAuth0();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        setLiked(likedByChanged.includes((decodeToken(localStorage.getItem('token')).nickname)));
-    }, [likedByChanged]);
+        getUserData();
+        setLiked(likedByArray.includes(user.sub));
+    }, [likedByArray]);
 
-    const WhenPosted = () => {
-        let today = new Date();
-        let post = date.substr(6, 9) + '-' + date.substr(3, 2) + '-' + date.substr(0, 2) + 'T' + time + ":00";
-        let postDate = new Date(post)
-        let diff = Math.abs(today - postDate);
-        let minutes = Math.floor(diff / 60000);
-        let hours = minutes / 60;
-        let days = hours / 24;
-        let weeks = days / 7;
-
-        if (minutes < 60) {
-            return Math.round(minutes) + "min";
-        } else if ((hours) < 24) {
-            return Math.round(hours) + "h"
-        } else if (days < 7) {
-            return Math.round(days) + " day(s)"
-        } else {
-            return Math.round(weeks) + " week(s)"
-        }
-    };
-
-    const liking = () => {
+    function getUserData() {
         axios({
-            url: 'http://localhost:3001/api/feed/update',
-            method: 'POST',
-            data: payload
+            url: `http://localhost:3001/api/user/getinfo/${userId}`,
+            method: 'GET',
         })
             .then((response) => {
-                setResponseLikes(response.data.likes)
-                setLikedByChanged(response.data.likedBy)
+                setUserData(response.data);
             })
             .catch(() => {
                 console.log('Internal server error');
             });
     }
 
-    return (
-        <div className="blog-post__display_new">
+    function getPostTime() {
+        return moment(date + time, "DD[.]MM[.]YYYY HH:mm:ss").fromNow();
+    }
 
-            <div className="blog_post_avatar_div">
-                <img className="blog_post_avatar"
-                     src="https://pbs.twimg.com/profile_images/502894072508325889/Rs02QhND.jpeg" alt="Avatar"/>
-            </div>
+    function NavigateToProfile() {
+        navigate(`/profile/${userId}`);
+    }
 
-            <div className="blog_post_full">
+    function deletePost() {
+        axios({
+            url: `http://localhost:3001/api/feed/deletepost/${id}`,
+            method: 'DELETE',
+        }).catch((e) => {
+            console.warn(e);
+        });
+        refreshPosts()
+    }
 
-                <div className="blog_post_header">
-                    <div className="blog_post_author">{author}&nbsp;</div>
-                    <div className="blog_post_nickname">@{author}</div>
-                    <div className="blog_post_postTime">&nbsp;·&nbsp;{WhenPosted()}</div>
-                </div>
+    function likePost() {
+        axios({
+            url: 'http://localhost:3001/api/feed/updatelikes',
+            method: 'POST',
+            data: {
+                isLiked: liked,
+                postId: id,
+                userId: user.sub
+            }
+        })
+            .then((response) => {
+                setLikedByArray(response.data.likedBy)
+            })
+            .catch(() => {
+                console.log('Internal server error');
+            });
+    }
 
-                <div className="blog_post_content">
-                    <div>{content}</div>
-                </div>
-                <div className="blog_post_engagement">
-                    <div>
-                        {liked ? <img onClick={liking} className="blog_post_heart" id="imageHeart"
-                                      src="https://icons.iconarchive.com/icons/succodesign/love-is-in-the-web/256/heart-icon.png"
-                                      alt="Avatar"/> :
-                            <img onClick={liking} className="blog_post_heart" id="imageHeart"
-                                 src="https://emojigraph.org/media/google/white-heart_1f90d.png" alt="Avatar"/>}
-                        {responseLikes}
+    if (isLoading || userData === undefined) {
+        if (chirpIndex === 0) {
+            return <LoadingSpin primaryColor="#1E80CD" secondaryColor="#FFFFFF"/>;
+        } else {
+            return <div></div>
+        }
+    } else {
+        return (
+            isAuthenticated && (
+                <div className="blog-post__display_new">
+
+                    <div className="blog_post_avatar_div">
+                        <div className="blog_post_avatar" onClick={() => NavigateToProfile()}><img
+                            className="blog_post_avatar" src={userData.picture} alt="user_avatar"/></div>
+                    </div>
+
+                    <div className="blog_post_full">
+                        <div className="blog_post_header">
+                            <div className="blog_post_nickname"
+                                 onClick={() => NavigateToProfile()}>{userData.nickname}</div>
+                            <div className="blog_post_postTime">&nbsp;·&nbsp;{getPostTime()}</div>
+                            {user.sub === userId ?
+                                <img className="blog_post_delete" src={trashIcon} onClick={() => deletePost()}
+                                     alt="Avatar"/> : false}
+                        </div>
+
+                        <div className="blog_post_content">
+                            {content}
+                        </div>
+                        <div className="blog_post_engagement">
+                            <div>
+                                {liked ? <img onClick={likePost} className="blog_post_heart" id="imageHeart"
+                                              src="https://icons.iconarchive.com/icons/succodesign/love-is-in-the-web/256/heart-icon.png"
+                                              alt="like_heart"/> :
+                                    <img onClick={likePost} className="blog_post_heart" id="imageHeart"
+                                         src="https://emojigraph.org/media/google/white-heart_1f90d.png"
+                                         alt="like_heart"/>}
+                                {likedByArray.length}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    )
+            )
+        )
+    }
 }
 
 export default SinglePost;

@@ -1,27 +1,45 @@
-import React from 'react';
-import {connect} from "react-redux";
-import igor from '../images/igor.jpg';
-import igor2 from '../images/igor2.jpg';
+import React, {useEffect, useState} from 'react';
 import axios from "axios";
-import ProfilePosts from "./profilePosts";
-import {decodeToken} from "react-jwt";
+import {useParams} from "react-router-dom";
+import SinglePost from "./singlePost";
+import {useAuth0} from "@auth0/auth0-react";
+import edit_profile_icon from "../images/edit_profile_icon.png"
+import LoadingSpin from "react-loading-spin";
 
-class Profile extends React.Component {
+const Profile = () => {
 
-    state = {
-        likes: 0,
-        posts: [],
-    };
+    const [userData, setUserData] = useState();
+    const [userPosts, setUserPosts] = useState([]);
+    const [userBio, setUserBio] = useState();
+    const [showBioEdit, setShowBioEdit] = useState(false);
+    const [editedBioContent, setEditedBioContent] = useState();
 
-    componentDidMount = () => {
-        this.getBlogPost();
-    };
+    const {isAuthenticated, isLoading, user} = useAuth0();
+    const {userid} = useParams();
 
-    getBlogPost = () => {
-        axios.get('http://localhost:3001/api/feed/posts')
+    useEffect(() => {
+        getUserData();
+        getBio();
+        getUserPosts();
+    }, []);
+
+    function getUserData() {
+        axios({
+            url: `http://localhost:3001/api/user/getinfo/${userid}`,
+            method: 'GET',
+        })
             .then((response) => {
-                const data = response.data;
-                this.setState({posts: data});
+                setUserData(response.data);
+            })
+            .catch(() => {
+                console.log('Internal server error');
+            });
+    }
+
+    function getUserPosts() {
+        axios.get(`http://localhost:3001/api/feed/userposts/${userid}`)
+            .then((response) => {
+                setUserPosts(response.data)
                 console.log('Data has been received!');
             })
             .catch(() => {
@@ -29,58 +47,94 @@ class Profile extends React.Component {
             });
     }
 
-    handleChange = ({target}) => {
-        const {name, value} = target;
-        this.setState({[name]: value});
+    function getBio() {
+        axios.get(`http://localhost:3001/api/user/getbio/${userid}`)
+            .then((response) => {
+                setUserBio(response.data.content)
+                console.log('Data has been received!');
+            })
+            .catch(() => {
+                alert('Error retrieving data!');
+            });
+    }
+
+    const refreshPosts = () => {
+        getUserPosts();
     };
 
-    displayBlogPost = (posts) => {
+    function displayBlogPost() {
+        if (!userPosts.length) return null;
 
-        if (!posts.length) return null;
-
-        return posts.slice(0).reverse().map((post, index) => (
-            <ProfilePosts
+        return userPosts.slice(0).reverse().map((post, index) => (
+            <SinglePost
+                key={post._id.toString()}
                 id={post._id}
-                author={post.author}
+                userId={post.userId}
                 content={post.content}
-                likes={post.likes}
                 date={post.date}
                 time={post.time}
+                refreshPosts={refreshPosts}
                 likedBy={post.likedBy}
+                chirpIndex={index}
             />
         ));
-    };
+    }
 
-    render() {
+    function editBio() {
+        axios({
+            url: 'http://localhost:3001/api/user/editbio',
+            method: 'PUT',
+            data: {
+                content: editedBioContent,
+                userId: userid
+            }
+        })
+            .then(() => {
+                setShowBioEdit(!showBioEdit)
+                window.location.reload()
+            })
+            .catch((e) => {
+                console.log('Internal server error' + e);
+            });
+    }
 
+    if (isLoading || userData === undefined) {
+        return <LoadingSpin primaryColor="#1E80CD" secondaryColor="#FFFFFF"/>;
+    } else {
         return (
-            <div id="profileDiv">
-                <div id="backgroundPhotoProfile">
-                    <img className="backgroundPhotoProfileImg"
-                         src={igor2} alt="Avatar"/>
-                </div>
-                <div id="photoProfile">
-                    <img className="photoProfileImg"
-                         src={igor} alt="Avatar"/>
-                </div>
-                <div id="aboutMeProfile">
-                    <div id="profileName">{decodeToken(localStorage.getItem('token')).name} {decodeToken(localStorage.getItem('token')).surname}</div>
-                    <div id="profileNickname">@{decodeToken(localStorage.getItem('token')).nickname}</div>
-                    <div id="profileDescription">To jest opis profilu.</div>
-                </div>
-                <div id="myPostsProfile">
-                    <div className="blog-">
-                        {this.displayBlogPost(this.state.posts)}
+            isAuthenticated && (
+                <div id="profileDiv">
+                    <div id="backgroundPhotoProfile">
+                        <img className="backgroundPhotoProfileImg"
+                             src={userData.picture} alt="Avatar"/>
+                    </div>
+                    <div id="photoProfile">
+                        <div className="photoProfileImg"><img className="photoProfileImg" src={userData.picture}
+                                                              alt="profile_picture"/></div>
+                    </div>
+                    <div id="aboutMeProfile">
+                        <div
+                            id="profileName">{userData.nickname}</div>
+                        <div id="profileDescription">{userBio}{showBioEdit &&
+                        <textarea className="showBioEdit"
+                                  onChange={e => setEditedBioContent(e.target.value)} defaultValue={userBio}/>}
+                            {showBioEdit && <div className="editBioBtn" onClick={() => editBio()}>Save</div>}
+                        </div>
+
+                        {userData.nickname === user.nickname ?
+                            <img className="bio_edit" src={edit_profile_icon} onClick={() => {
+                                setShowBioEdit(!showBioEdit);
+                            }} alt="Avatar"/> : false}
+                    </div>
+                    <div id="myPostsProfile">
+                        <div className="blog-">
+                            {displayBlogPost()}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )
         )
-
     }
 }
 
-const mapStateToProps = state => ({
-    userNickname: state.userNickname
-});
-
-export default connect(mapStateToProps)(Profile);
+export default Profile;
