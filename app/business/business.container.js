@@ -1,13 +1,19 @@
-'use strict';
-
+import postManager from './post.manager';
 import userManager from './user.manager';
 
-function getter(manager, request) {
-  return function () {
-    return manager.create(request, this);
-  };
+function getPostManager(manager, request) {
+    return function () {
+        return manager.postManager(request, this);
+    };
+}
+
+function getUserManager(manager, request) {
+    return function () {
+        return manager.userManager(request, this);
+    };
 }
 
 export default {
-    getUserManager: getter(userManager)
+    getPostManager: getPostManager(postManager),
+    getUserManager: getUserManager(userManager)
 };

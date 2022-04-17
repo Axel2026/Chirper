@@ -1,215 +1,41 @@
 import business from '../business/business.container';
-import applicationException from '../service/applicationException';
-import auth from '../middleware/auth';
-import * as databaseUrl from "mongodb";
-import * as mongoose from "mongoose";
 
-const PostModel = require('../DAO/postDAO');
-const MessageModel = require('../DAO/messageDAO');
 const userEndpoint = (router) => {
 
-
-    router.post('/sendcastle/user/auth', async (request, response) => {
-        try {
-            console.log("przeszlo 1")
-            let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
-            console.log("email " + request.body.email)
-            console.log("password " + request.body.password)
-            response.status(200).send(result);
-            console.log("restu;lt: " + (result.user.nickname))
-            console.log("przeszlo last")
-        } catch (error) {
-            console.log("error catch")
-            applicationException.errorHandler(error, response);
-        }
-    });
-
-
-    router.get('/sendcastle/feed/posts', (req, res) => {
-
-        setTimeout(function () {
-            PostModel.find({})
-                .then((data) => {
-                    res.json(data);
-                })
-                .catch((error) => {
-                    console.log('error: ', error);
-                });
-
-        }, 1000);
-
-    });
-
-
-    router.post('/sendcastle/newconversation', async (request, response) => {
-        try {
-            mongoose.model("conversation3", {
-                author: {
-                    type: String,
-                    index: true
-                }
-            })
-            response.status(200)
-        } catch (error) {
-            applicationException.errorHandler(error, response);
-        }
-    });
-
-
-
-
-
-
-
-
-
-
-
-    // -----------------------------------------------
-    // -----------------------------------------------
-    // CHIRPER
-    // -----------------------------------------------
-    // -----------------------------------------------
-
-    router.post('/api/user/auth', async (request, response) => {
-        try {
-            let result = await business.getUserManager(request).authenticate(request.body.email, request.body.password);
-
-            response.status(200).send(result);
-        } catch (error) {
-            applicationException.errorHandler(error, response);
-        }
-    });
-
     router.get('/api/feed/posts', (req, res) => {
-        PostModel.find({})
-            .then((data) => {
-                res.json(data);
-            })
-            .catch((error) => {
-                console.log('error: ', error);
-            });
+        business.getPostManager().getPosts(res)
     });
 
-    router.get('/api/feed/chat', (req, res) => {
-        MessageModel.find({})
-            .then((data) => {
-                res.json(data);
-            })
-            .catch((error) => {
-                console.log('error: ', error);
-            });
+    router.get('/api/feed/userposts/:id', (req, res) => {
+        business.getPostManager().getUserPosts(req.params.id, res)
     });
 
     router.post('/api/feed/save', (req, res) => {
-
-        var date = new Date();
-
-        if (date.getMonth() < 10) {
-            var month = date.getMonth() + 1
-            if (date.getDate() < 10) {
-                var dateString = "0" + date.getDate() + "." + "0" + month + "." + date.getFullYear();
-            } else {
-                var dateString = date.getDate() + "." + "0" + month + "." + date.getFullYear();
-            }
-        } else {
-            var month = date.getMonth() + 1
-            if (date.getDate() < 10) {
-                var dateString = "0" + date.getDate() + "." + month + "." + date.getFullYear();
-            } else {
-                var dateString = date.getDate() + "." + month + "." + date.getFullYear();
-            }
-        }
-
-        if (date.getMinutes() < 10) {
-            var timeString = date.getHours() + ":0" + date.getMinutes()
-        } else {
-            var timeString = date.getHours() + ":" + date.getMinutes()
-        }
-
-        const newPostModel = new PostModel({
-            author: req.body.author,
-            content: req.body.content,
-            date: dateString,
-            time: timeString,
-            likes: req.body.likes,
-            likedBy: []
-        });
-
-        newPostModel.save((error) => {
-            if (error) {
-                res.status(500).json({msg: 'Sorry, internal server errors'});
-                return;
-            }
-            return res.json({
-                msg: 'Your data has been saved!'
-            });
-        });
+        business.getPostManager().savePost(req, res)
     });
 
-
-    router.post('/api/feed/send', (req, res) => {
-
-        var date = new Date();
-
-        if (date.getMinutes() < 10) {
-            var timeString = date.getHours() + ":0" + date.getMinutes()
-        } else {
-            var timeString = date.getHours() + ":" + date.getMinutes()
-        }
-        const newMessageModel = new MessageModel({
-            author: req.body.author,
-            content: req.body.content,
-            time: timeString,
-        });
-
-        newMessageModel.save((error) => {
-            if (error) {
-                res.status(500).json({msg: 'Sorry, internal server errors'});
-                return;
-            }
-            return res.json({
-                msg: 'Your data has been saved!'
-            });
-        });
+    router.post('/api/feed/updatelikes', (req, res) => {
+        business.getPostManager().updateLikes(req, res)
     });
 
-    router.post('/api/feed/update', (req, res) => {
-
-        var numberOfLikes = 0;
-        PostModel.find({_id: req.body.postId}, {_id: 0, likes: 1, likedBy: 2, author: 3})
-            .then((data) => {
-                var actionLikes;
-                if (!req.body.isLiked) {
-                    actionLikes = 1
-                    data[0].likedBy.push(req.body.nickname)
-                } else {
-                    actionLikes = -1;
-                    data[0].likedBy.remove(req.body.nickname)
-                }
-                data[0].likes += actionLikes;
-                numberOfLikes = data[0].likes;
-
-                var myQuery = {_id: req.body.postId};
-                var newValues = {$set: {likes: numberOfLikes, likedBy: data[0].likedBy}};
-
-                PostModel.updateOne(myQuery, newValues, function (err, res) {
-                    if (err) throw err;
-                });
-                res.status(200).send(data[0]);
-            })
-            .catch((error) => {
-                console.log('error: ', error);
-            });
+    router.delete('/api/feed/deletepost/:id', (req) => {
+        business.getPostManager().deletePost(req.params.id)
     });
 
-    router.post('/api/user/create', async (request, response, next) => {
-        try {
-            const result = await business.getUserManager(request).createNewOrUpdate(request.body);
-            response.status(200).send(result);
-        } catch (error) {
-            applicationException.errorHandler(error, response);
-        }
+    router.get('/api/posts/hotposts', (req, res) => {
+        business.getPostManager().getHotPosts(res)
+    });
+
+    router.get('/api/user/getinfo/:id', (req, res) => {
+        business.getUserManager().getUserInfo(req.params.id, res)
+    });
+
+    router.get('/api/user/getbio/:id', (req, res) => {
+        business.getUserManager().getUserBio(req.params.id, res)
+    });
+
+    router.put('/api/user/editbio', (req, res) => {
+        business.getUserManager().editUserBio(req, res)
     });
 };
 
